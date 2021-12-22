@@ -6,7 +6,7 @@ from config import CdkConfig
 
 class AlbService():
     @staticmethod
-    def create_alb(stack, vpc, ec2server, public_subnet, alb_security_group, certificate_arn):
+    def create_alb(stack, vpc, ec2server, public_subnet, alb_security_group):
         targetgroup = aws_elasticloadbalancingv2.ApplicationTargetGroup(
             scope=stack,
             id=CdkConfig.config['alb_resources']['targetgroup']['id'],
@@ -54,7 +54,7 @@ class AlbService():
             protocol=aws_elasticloadbalancingv2.ApplicationProtocol.HTTPS,
             open=False,
             default_target_groups=[targetgroup],
-            certificate_arns=[certificate_arn]
+            certificate_arns=["arn:aws:acm:us-east-1:748208346432:certificate/9292c84a-9da3-4c28-afce-fb258e046082"]
         )
         return alb
         
