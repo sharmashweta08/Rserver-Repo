@@ -1,0 +1,288 @@
+trigger:
+  branches:
+    include:
+      - master
+      - nonprd
+      - dev
+      - feature/*
+  paths:
+    exclude:
+      - README.md
+      - .gitignore
+pr:
+  - master
+  - nonprd
+  - dev
+
+variables:
+  ${{ if eq(variables['build.sourceBranch'], 'refs/heads/dev')}}:
+    DEPLOY_ENV: dev
+    ACCOUNT_ID: 748208346432
+  ${{ if eq(variables['build.sourceBranch'], 'refs/heads/nonprd')}}:
+    DEPLOY_ENV: nonprd
+    ACCOUNT_ID: 748208346432
+  ${{ if eq(variables['build.sourceBranch'], 'refs/heads/master')}}:
+    DEPLOY_ENV: prd
+    ACCOUNT_ID: 748208346432
+  ${{ if contains(variables['build.sourceBranch'], 'refs/heads/feature/')}}:
+    DEPLOY_ENV: dev
+    ACCOUNT_ID: 748208346432
+  ${{ if contains(variables['build.sourceBranch'], 'pull/')}}:
+    DEPLOY_ENV: dev
+    ACCOUNT_ID: 748208346432
+  
+  PRIMARY_RSERVER_DEPLOY: false
+  HOSTED_ZONE_DEPLOY: true
+  REGION: us-east-1
+  PYTHON_VERSION: 3.9.x
+  CDK_VERSION: 1.134.0
+  VI_IMAGE: ubuntu-latest
+
+stages:
+- stage: build_and_test
+  displayName: build and test
+  variables:
+    AWS_ENV: $(DEPLOY_ENV)
+    AWS_ACCOUNT_ID: $(ACCOUNT_ID)
+    AWS_REGION: $(REGION)
+  jobs:
+  - job: build_and_test
+    displayName: build and test
+    pool: 
+      vmImage: $(VI_IMAGE)
+    
+    steps: 
+    - task: UsePythonVersion@0
+      displayName: Use Python
+      inputs:
+        versionSpec: $(PYTHON_VERSION)
+      
+    - task: ShellScript@2
+      displayName: Set Config Files
+      inputs:
+        args: '$(DEPLOY_ENV)'
+        scriptPath: pipeline/scripts/update_config.sh
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
+
+    - task: ShellScript@2
+      displayName: Install Requirements.txt
+      inputs:
+        scriptPath: pipeline/scripts/install_requirements.sh
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
+
+    - task: ShellScript@2
+      displayName: Run Bandit Scan
+      inputs:
+        scriptPath: pipeline/scripts/run_bandit_scans.sh
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
+
+    - task: ShellScript@2
+      displayName: Run Infrastructure Unit Test
+      inputs:
+        scriptPath: pipeline/scripts/run_infra_unit_test.sh
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
+
+    - task: PythonScript@0
+      displayName: pylint Checks
+      inputs:
+        scriptPath: pipeline/scripts/run_pylint.py
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
+
+    - task: ShellScript@2
+      displayName: Zip Lambda Function
+      inputs:
+        scriptPath: pipeline/scripts/lambda_zip.sh
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
+
+    - task: ShellScript@2
+      displayName: Run CDK Synth
+      inputs:
+        args: $(CDK_VERSION)
+        scriptPath: pipeline/scripts/cdk_synth.sh
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
+
+    - task: ShellScript@2
+      displayName: Run CFN Lint
+      inputs:
+        args: $(DEPLOY_ENV)
+        scriptPath: pipeline/scripts/cfn_lint.sh
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
+
+    - task: ShellScript@2
+      displayName: Run CFN Nag
+      inputs:
+        args: $(DEPLOY_ENV)
+        scriptPath: pipeline/scripts/cfn_nag.sh
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
+
+    - task: CopyFiles@2
+      displayName: 'Copy Files to : $(Build.ArtifactStagingDirectory)'
+      inputs:
+        sourceFolder: $(Build.SourcesDirectory)
+        contents: |
+          infra/**
+          pipeline/scripts/**
+          lambda/**
+        targetFolder: $(Build.ArtifactStagingDirectory)
+        cleanTargetFolder: true
+        overWrite: true
+        flattenFolders: false
+        preserveTimestamp: false
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Artifacts for AWS Infra
+
+
+- stage: deploy_to_dev
+  displayName: deploy_to_dev
+  dependsOn: build_and_test
+  condition: "and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/dev'))"
+  variables:
+    AWS_ENV: $(DEPLOY_ENV)
+    AWS_ACCOUNT_ID: $(ACCOUNT_ID)
+    AWS_REGION: $(REGION)
+  jobs: 
+    -
+      deployment: deploy_dev
+      displayName: Deploy Dev
+      pool:
+        vmImage: $(VI_IMAGE)
+      environment: $(DEPLOY_ENV)
+      strategy: 
+        runOnce:
+          deploy:
+            steps:
+              -
+                task: DownloadPipelineArtifact@2
+                displayName: DownloadArtifacts
+                inputs:
+                  artifact: drop
+                  path: $(System.ArtifactsDirectory)
+              -
+                task: UsePythonVersion@0
+                displayName: Use Python
+                inputs:
+                  versionSpec: $(PYTHON_VERSION)
+              -
+                task: ShellScript@2
+                displayName: Install Requirements.txt
+                inputs:
+                  scriptPath: $(System.ArtifactsDirectory)/pipeline/scripts/install_requirements.sh
+                  cwd: $(System.ArtifactsDirectory)
+                  disableAutoCwd: true
+              -
+                task: AWSShellScript@1
+                displayName: Execute CDK Deploy
+                inputs:
+                  awsCredentials: shweta_aws_connection
+                  regionName: $(REGION)
+                  arguments: '$(System.ArtifactsDirectory) $(ACCOUNT_ID) $(REGION) $(CDK_VERSION)'
+                  filePath: $(System.ArtifactsDirectory)/pipeline/scripts/cdk_deploy.sh
+                  workingDirectory: $(System.ArtifactsDirectory)
+                  disableAutoCwd: true
+            
+- stage: deploy_to_nonprd
+  displayName: deploy_to_nonprd
+  dependsOn: build_and_test
+  condition: "and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/nonprd'))"
+  variables:
+    AWS_ENV: $(DEPLOY_ENV)
+    AWS_ACCOUNT_ID: $(ACCOUNT_ID)
+    AWS_REGION: $(REGION)
+  jobs: 
+    -
+      deployment: deploy_nonprd
+      displayName: Deploy Non Prod
+      pool:
+        vmImage: $(VI_IMAGE)
+      environment: $(DEPLOY_ENV)
+      strategy: 
+        runOnce:
+          deploy:
+            steps:
+              -
+                task: DownloadPipelineArtifact@2
+                displayName: DownloadArtifacts
+                inputs:
+                  artifact: drop
+                  path: $(System.ArtifactsDirectory)
+              -
+                task: UsePythonVersion@0
+                displayName: Use Python
+                inputs:
+                  versionSpec: $(PYTHON_VERSION)
+              -
+                task: ShellScript@2
+                displayName: Install Requirements.txt
+                inputs:
+                  scriptPath: $(System.ArtifactsDirectory)/pipeline/scripts/install_requirements.sh
+                  cwd: $(System.ArtifactsDirectory)
+                  disableAutoCwd: true
+              -
+                task: AWSShellScript@1
+                displayName: Execute CDK Deploy
+                inputs:
+                  awsCredentials: shweta_aws_connection
+                  regionName: $(REGION)
+                  arguments: '$(System.ArtifactsDirectory) $(ACCOUNT_ID) $(REGION) $(CDK_VERSION)'
+                  filePath: $(System.ArtifactsDirectory)/pipeline/scripts/cdk_deploy.sh
+                  workingDirectory: $(System.ArtifactsDirectory)
+                  disableAutoCwd: true
+
+
+- stage: deploy_to_prd
+  displayName: deploy_to_prd
+  dependsOn: build_and_test
+  condition: "and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/master'))"
+  variables:
+    AWS_ENV: $(DEPLOY_ENV)
+    AWS_ACCOUNT_ID: $(ACCOUNT_ID)
+    AWS_REGION: $(REGION)
+  jobs: 
+    -
+      deployment: deploy_prd
+      displayName: Deploy Prd
+      pool:
+        vmImage: $(VI_IMAGE)
+      environment: $(DEPLOY_ENV)
+      strategy: 
+        runOnce:
+          deploy:
+            steps:
+              -
+                task: DownloadPipelineArtifact@2
+                displayName: DownloadArtifacts
+                inputs:
+                  artifact: drop
+                  path: $(System.ArtifactsDirectory)
+              -
+                task: UsePythonVersion@0
+                displayName: Use Python
+                inputs:
+                  versionSpec: $(PYTHON_VERSION)
+              -
+                task: ShellScript@2
+                displayName: Install Requirements.txt
+                inputs:
+                  scriptPath: $(System.ArtifactsDirectory)/pipeline/scripts/install_requirements.sh
+                  cwd: $(System.ArtifactsDirectory)
+                  disableAutoCwd: true
+              -
+                task: AWSShellScript@1
+                displayName: Execute CDK Deploy
+                inputs:
+                  awsCredentials: shweta_aws_connection
+                  regionName: $(REGION)
+                  arguments: '$(System.ArtifactsDirectory) $(ACCOUNT_ID) $(REGION) $(CDK_VERSION)'
+                  filePath: $(System.ArtifactsDirectory)/pipeline/scripts/cdk_deploy.sh
+                  workingDirectory: $(System.ArtifactsDirectory)
+                  disableAutoCwd: true
