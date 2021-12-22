@@ -145,7 +145,7 @@ stages:
 - stage: deploy_to_dev
   displayName: deploy_to_dev
   dependsOn: build_and_test
-  condition: "and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/dev'))"
+  condition: "and(succeeded(), eq(variables['build.sourceBranch'], 'refs/heads/feature/shweta'))"
   variables:
     AWS_ENV: $(DEPLOY_ENV)
     AWS_ACCOUNT_ID: $(ACCOUNT_ID)
