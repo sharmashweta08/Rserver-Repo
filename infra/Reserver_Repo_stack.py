@@ -8,6 +8,7 @@ from services.ec2_construct import EC2Service
 from services.alb_construct import AlbService
 from services.ssl_construct import SSLService
 from services.hosted_zone_construct import HostedZoneService
+from services.lambda_construct import LambdaService
 from config import CdkConfig
 
 class RserverRepoStack(core.Stack):
@@ -32,5 +33,4 @@ class RserverRepoStack(core.Stack):
             #      certificate.certificate_arn)
             alb = AlbService.create_alb(stack, vpc, ec2server, public_subnet, alb_security_group)
             HostedZoneService.create_a_record(stack, alb, rserver_hosted_zone)
-
-        
+            LambdaService.create_rserver_lambda(stack, iamrole)

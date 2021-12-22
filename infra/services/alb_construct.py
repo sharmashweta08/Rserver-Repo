@@ -38,14 +38,15 @@ class AlbService():
             id=CdkConfig.config['alb_resources']['listeners']['id_80'],
             port=80,
             open=False,
-            default_action=aws_elasticloadbalancingv2.ListenerAction.redirect(
-                host="#{host}",
-                path="/#{path}",
-                port="443",
-                permanent=True,
-                protocol="HTTPS",
-                query="#{query}"
-            )
+            default_target_groups=[targetgroup]
+            # default_action=aws_elasticloadbalancingv2.ListenerAction.redirect(
+            #     host="#{host}",
+            #     path="/#{path}",
+            #     port="443",
+            #     permanent=True,
+            #     protocol="HTTPS",
+            #     query="#{query}"
+            # ),
         )
         # alb.add_listener(
         #     id=CdkConfig.config['alb_resources']['listeners']['id_443'],
