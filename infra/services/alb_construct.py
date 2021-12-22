@@ -47,12 +47,12 @@ class AlbService():
                 query="#{query}"
             )
         )
-        alb.add_listener(
-            id=CdkConfig.config['alb_resources']['listeners']['id_443'],
-            port=443,
-            open=False,
-            default_target_groups=[targetgroup],
-            certificate_arns=["arn:aws:acm:us-east-1:748208346432:certificate/9292c84a-9da3-4c28-afce-fb258e046082"]
-        )
+        # alb.add_listener(
+        #     id=CdkConfig.config['alb_resources']['listeners']['id_443'],
+        #     port=443,
+        #     open=False,
+        #     default_target_groups=[targetgroup],
+        #     certificate_arns=["arn:aws:acm:us-east-1:748208346432:certificate/9292c84a-9da3-4c28-afce-fb258e046082"]
+        # )
         return alb
         
