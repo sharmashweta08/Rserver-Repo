@@ -6,7 +6,7 @@ from config import CdkConfig
 
 class AlbService():
     @staticmethod
-    def create_alb(stack, vpc, ec2server, public_subnet, alb_security_group, certificate_arn):
+    def create_alb(stack, vpc, ec2server, public_subnet, alb_security_group):
         targetgroup = aws_elasticloadbalancingv2.ApplicationTargetGroup(
             scope=stack,
             id=CdkConfig.config['alb_resources']['targetgroup']['id'],
