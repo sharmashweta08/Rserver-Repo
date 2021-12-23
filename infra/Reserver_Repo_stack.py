@@ -27,10 +27,10 @@ class RserverRepoStack(core.Stack):
             alb_security_group = NetworkService.create_alb_security_group(stack, vpc)
             ec2_securitygroup = NetworkService.create_ec2_security_group(stack, vpc, alb_security_group)
             ec2server = EC2Service.create_ec2_service(stack, vpc, private_subnet, ec2_securitygroup, iamrole)
-            rserver_hosted_zone = HostedZoneService.get_hosted_zone(stack)
+            # rserver_hosted_zone = HostedZoneService.get_hosted_zone(stack)
             # certificate = SSLService.create_ssl(stack, rserver_hosted_zone)
             # alb = AlbService.create_alb(stack, vpc, ec2server, public_subnet, alb_security_group,\
             #      certificate.certificate_arn)
-            alb = AlbService.create_alb(stack, vpc, ec2server, public_subnet, alb_security_group)
-            HostedZoneService.create_a_record(stack, alb, rserver_hosted_zone)
+            # alb = AlbService.create_alb(stack, vpc, ec2server, public_subnet, alb_security_group)
+            # HostedZoneService.create_a_record(stack, alb, rserver_hosted_zone)
             LambdaService.create_rserver_lambda(stack, iamrole)
