@@ -34,26 +34,26 @@ class AlbService():
             vpc_subnets=public_subnet,
             security_group=alb_security_group
         )
-        # alb.add_listener(
-        #     id=CdkConfig.config['alb_resources']['listeners']['id_80'],
-        #     port=80,
-        #     open=False,
-        #     default_target_groups=[targetgroup]
-        #     # default_action=aws_elasticloadbalancingv2.ListenerAction.redirect(
-        #     #     host="#{host}",
-        #     #     path="/#{path}",
-        #     #     port="443",
-        #     #     permanent=True,
-        #     #     protocol="HTTPS",
-        #     #     query="#{query}"
-        #     # ),
-        # )
-        # alb.add_listener(
-        #     id=CdkConfig.config['alb_resources']['listeners']['id_443'],
-        #     port=443,
-        #     open=False,
-        #     default_target_groups=[targetgroup],
-        #     certificate_arns=["arn:aws:acm:us-east-1:748208346432:certificate/9292c84a-9da3-4c28-afce-fb258e046082"]
-        # )
+        alb.add_listener(
+            id=CdkConfig.config['alb_resources']['listeners']['id_80'],
+            port=80,
+            open=False,
+            # default_target_groups=[targetgroup]
+            default_action=aws_elasticloadbalancingv2.ListenerAction.redirect(
+                host="#{host}",
+                path="/#{path}",
+                port="443",
+                permanent=True,
+                protocol="HTTPS",
+                query="#{query}"
+            ),
+        )
+        alb.add_listener(
+            id=CdkConfig.config['alb_resources']['listeners']['id_443'],
+            port=443,
+            open=False,
+            default_target_groups=[targetgroup],
+            certificate_arns=["arn:aws:acm:us-east-1:748208346432:certificate/9292c84a-9da3-4c28-afce-fb258e046082"]
+        )
         return alb
         
