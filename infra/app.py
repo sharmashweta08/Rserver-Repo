@@ -1,6 +1,6 @@
 '''aap.py'''
 from aws_cdk import core
-from Reserver_Repo_stack import RserverRepoStack
+from Reserver_Repo_Stack import RserverRepoStack
 from config import CdkConfig
 
 resource = core.App()
