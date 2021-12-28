@@ -13,7 +13,8 @@ class EC2Service():
             id=CdkConfig.config['ec2_resources']['id'],
             instance_name=CdkConfig.config['ec2_resources']['instance_name'],
             instance_type=aws_ec2.InstanceType(
-                instance_type_identifier=CdkConfig.config['ec2_resources']['instance_type_identifier']
+                instance_type_identifier=CdkConfig.config['ec2_resources']\
+                    ['instance_type_identifier']
             ),
             machine_image=aws_ec2.MachineImage.generic_linux(
                 {CdkConfig.config['region']:CdkConfig.config['ec2_resources']['machine_image']}
@@ -30,7 +31,8 @@ class EC2Service():
             "yum install -y --nogpgcheck rstudio-server-rhel-1.0.153-x86_64.rpm",
             "rm rstudio-server-rhel-1.0.153-x86_64.rpm",
             "R -e 'install.packages('shiny', repos='http://cran.rstudio.com/')'",
-            "wget https://download3.rstudio.org/centos5.9/x86_64/shiny-server-1.5.4.869-rh5-x86_64.rpm",
+            "wget \
+            https://download3.rstudio.org/centos5.9/x86_64/shiny-server-1.5.4.869-rh5-x86_64.rpm",
             "yum install -y --nogpgcheck shiny-server-1.5.4.869-rh5-x86_64.rpm",
             "rm -f shiny-server-1.5.4.869-rh5-x86_64.rpm",
             "yum install -y git"

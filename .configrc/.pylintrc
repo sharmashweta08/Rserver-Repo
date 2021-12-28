@@ -51,7 +51,7 @@ unsafe-load-any-extension=no
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=R0903,E1136,W1501,E1120,R1705,R1710,W0703
+disable=R0903,E1136,W1501,E1120,R1705,R1710,W0703,W0613,C0103
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

@@ -22,5 +22,3 @@ if CdkConfig.hosted_zone_deploy == 'true':
         tags = CdkConfig.config['tags']
     )
 resource.synth()
-
-

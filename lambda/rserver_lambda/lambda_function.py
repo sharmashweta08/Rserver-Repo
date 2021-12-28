@@ -1,22 +1,23 @@
-import json
-import boto3
+'''Lambda FUnction'''
 import time
+import boto3
 
 ssm_client = boto3.client('ssm')
 ec2_client = boto3.client('ec2')
 
 def lambda_handler(event, context):
+    """Main FUnction"""
     instance_id = []
     reservation = ec2_client.describe_instances(
         Filters = [{
             'Name':'tag:Name',
             'Values':['Rserver',]
         },],DryRun=False).get('Reservations', [])
-    instances = sum([[i for i in r['Instances']]for r in reservation], [])
+    instances = sum([[i for i in r['Instances']]for r in reservation], [])    #pylint: disable=R1721
     for instance in instances:
         if instance["State"]["Name"]=="running":
             instance_id.append(instance['InstanceId'])
-    for id in instance_id:
+    for id in instance_id:                                  #pylint: disable=W0622
         response = ssm_client.send_command(
             InstanceIds=[
                 id,
@@ -26,7 +27,8 @@ def lambda_handler(event, context):
                 'commands': [
                     'adduser ankit',
                     'echo ankit:Qwerty@123 | chpasswd',
-                    "su - ankit -c 'git config --global credential.helper \"!aws codecommit credential-helper $@\"'",
+                    "su - ankit -c 'git config --global \
+                        credential.helper \"!aws codecommit credential-helper $@\"'",
                     "su - ankit -c 'git config --global credential.UseHttpPath true'",
                     "su - ankit -c 'git config --global user.email \"ss.meetu1994@gmail.com\"'",
                     "su - shweta -c 'git config --global user.name \"Shweta\"'",

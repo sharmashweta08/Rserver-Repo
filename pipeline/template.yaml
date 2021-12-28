@@ -79,19 +79,19 @@ stages:
         cwd: $(Build.SourcesDirectory)
         disableAutoCwd: true
 
-    # - task: ShellScript@2
-    #   displayName: Run Infrastructure Unit Test
-    #   inputs:
-    #     scriptPath: pipeline/scripts/run_infra_unit_test.sh
-    #     cwd: $(Build.SourcesDirectory)
-    #     disableAutoCwd: true
+    - task: ShellScript@2
+      displayName: Run Infrastructure Unit Test
+      inputs:
+        scriptPath: pipeline/scripts/run_infra_unit_test.sh
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
 
-    # - task: PythonScript@0
-    #   displayName: pylint Checks
-    #   inputs:
-    #     scriptPath: pipeline/scripts/run_pylint.py
-    #     cwd: $(Build.SourcesDirectory)
-    #     disableAutoCwd: true
+    - task: PythonScript@0
+      displayName: pylint Checks
+      inputs:
+        scriptPath: pipeline/scripts/run_pylint.py
+        cwd: $(Build.SourcesDirectory)
+        disableAutoCwd: true
 
     - task: ShellScript@2
       displayName: Zip Lambda Function

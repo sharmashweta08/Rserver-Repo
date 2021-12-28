@@ -7,7 +7,7 @@ from config import CdkConfig
 class LambdaService():
     """Lambda service class"""
     @staticmethod
-    def create_rserver_lambda(stack, iam_role):        #pylint: disable=too-many-arguments
+    def create_rserver_lambda(stack, iam_role):
         """Creation of Inegi raw lambda service"""
         lambda_service = aws_lambda.Function(
             scope=stack,

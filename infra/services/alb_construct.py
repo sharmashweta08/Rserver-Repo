@@ -1,17 +1,20 @@
 '''Construct File of Application Load Balancer'''
-from aws_cdk import aws_ec2
+# from aws_cdk import aws_ec2
 from aws_cdk import aws_elasticloadbalancingv2
 from aws_cdk import aws_elasticloadbalancingv2_targets
 from config import CdkConfig
 
 class AlbService():
+    """ALB Service Class"""
     @staticmethod
     def create_alb(stack, vpc, ec2server, public_subnet, alb_security_group):
+        """Creating ALB Function"""
         targetgroup = aws_elasticloadbalancingv2.ApplicationTargetGroup(
             scope=stack,
             id=CdkConfig.config['alb_resources']['targetgroup']['id'],
             target_type=aws_elasticloadbalancingv2.TargetType.INSTANCE,
-            target_group_name=CdkConfig.config['alb_resources']['targetgroup']['target_group_name'],
+            target_group_name=CdkConfig.config['alb_resources']['targetgroup']\
+                ['target_group_name'],
             vpc=vpc,
             protocol=aws_elasticloadbalancingv2.ApplicationProtocol.HTTP,
             port=CdkConfig.config['alb_resources']['targetgroup']['port'],
@@ -53,7 +56,8 @@ class AlbService():
             port=443,
             open=False,
             default_target_groups=[targetgroup],
-            certificate_arns=["arn:aws:acm:us-east-1:748208346432:certificate/9292c84a-9da3-4c28-afce-fb258e046082"]
+            certificate_arns=["arn:aws:acm:us-east-1:748208346432:\
+                certificate/9292c84a-9da3-4c28-afce-fb258e046082"]
         )
         return alb
         

@@ -5,8 +5,10 @@ from aws_cdk import aws_route53_targets
 from config import CdkConfig
 
 class HostedZoneService():
+    """Hosted Zone Service Class"""
     @staticmethod
     def create_hosted_zone(stack):
+        """Creating Hosted Zone Service"""
         rserver_hosted_zone = aws_route53.HostedZone(
             scope=stack,
             id=CdkConfig.config['hosted_zone_resources']['rserver_hosted_zone']['id'],
@@ -16,16 +18,19 @@ class HostedZoneService():
 
     @staticmethod
     def get_hosted_zone(stack):
+        """Getting Hosted Zone Name"""
         get_the_zone = aws_route53.HostedZone.from_hosted_zone_attributes(
             scope=stack,
             id=CdkConfig.config['hosted_zone_resources']['get_hosted_zone']['id'],
-            hosted_zone_id=CdkConfig.config['hosted_zone_resources']['get_hosted_zone']['hosted_zone_id'],
+            hosted_zone_id=CdkConfig.config['hosted_zone_resources']['get_hosted_zone']\
+                ['hosted_zone_id'],
             zone_name=CdkConfig.config['hosted_zone_resources']['rserver_hosted_zone']['zone_name']
         )
         return get_the_zone
 
     @staticmethod
     def create_a_record(stack, alb, rserver_hosted_zone):
+        """Creating a A Record"""
         a_record = aws_route53.ARecord(
             scope=stack,
             id=CdkConfig.config['hosted_zone_resources']['a_record']['id'],

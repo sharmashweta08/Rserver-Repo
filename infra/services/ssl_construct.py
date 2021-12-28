@@ -4,8 +4,10 @@ from aws_cdk import aws_certificatemanager
 from config import CdkConfig
 
 class SSLService():
+    """SSL Service Class"""
     @staticmethod
     def create_ssl(stack,rserver_hosted_zone):
+        """Creating SSL - Function"""
         certificate = aws_certificatemanager.Certificate(
             scope=stack,
             id=CdkConfig.config['ssl_resources']['id'],

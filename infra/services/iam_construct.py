@@ -149,7 +149,7 @@ class IamService():
         return policy_statement
 
     @staticmethod
-    def codecommit_policy():
+    def codecommit_policy():      #pylint: disable=too-many-statements
         """Policy of Code Commit"""
         policy_statement = aws_iam.PolicyStatement()
         policy_statement.effect = aws_iam.Effect.ALLOW
